@@ -26,20 +26,112 @@ ANS : .pem file it is used to login into instance on behalf of us , we are allow
 
 How to do this ? 
 
-Ans : 
+Ans : ur repo--> settings--> secrets and variables --> actions --> new repo secrete--> store key secrect --> save 
+
+
 
 2 HOST_DNS : Public DNS record of the instance , it will look something like this ec2-xx-xxx-xxx-xxx.ap-south-1
 
+ans : copy public ipv4 DNS of ec2 instance 
+
+add other secret --> copy public ipv4 DNS of ec2 instance --> save 
+
+
+
+
 3 USERNAME : will be the username of the EC2 instance , usually Ubuntu , ams linux...
 
-4 TARGET_DIR : It is where you want to deploy ur code 
+here it is ubuntu
+
+
+
+4 TARGET_DIR : as soon as u login what is the DIR u want to copy the content from the Github and place into the ec2  
+
+It is where you want to deploy ur code 
+
+
+here secret is home
 
 
 
 -- once u add all these information your repo will look like this GItHub Secrets
 
 
--- 
+
+
+-- Step 3 : 
+
+-- create work flow 
+
+-- u have to create one yaml file 
+
+-- click on add files add this 
+
+.github/workflows/github-actions-ec2.yml
+
+copy contet in this flow 
+
+
+name: Push-to-EC2
+
+# Trigger deployment only on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2 on master branch push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the files
+        uses: actions/checkout@v2
+
+      - name: Deploy to Server 1
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo apt-get -y update
+            sudo apt-get install -y apache2
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            cd home
+            sudo mv * /var/www/html
 
 
 
+-- this is yaml file 
+
+exp : what we are trying to do , here we are Trigger deployment only on push to main branch , if u change anything in main brach it will going to trigger only main branch , then it push changes to ec2 
+
+-- how it push changes changes to ec2 ? 
+
+here we have specied the secrets to login into the ec2 
+
+-- without login into ec2 instance , all the data will be taken and it will push into ur instance and by using ur instance public IPv4 u will able to access  
+
+
+-- now do test 
+
+-- c.o actions --> check how it will create automatically triggered 
+
+-- copy ec2 ip and paste in browser 
+
+-- u will get ur resume on web without login into ur instance 
+
+-- now do some changes in index.html file in main branch and check in actions u will see it is updating ur file automatically it pick up changes and it will start deploying 
+
+-- done 
